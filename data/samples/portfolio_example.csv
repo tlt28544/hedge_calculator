@@ -1,0 +1,5 @@
+ticker,amount_usd,name,notes
+AAPL.US,50000,Apple,Core long
+MSFT.US,40000,Microsoft,Core long
+NVDA.US,30000,Nvidia,AI tilt
+QQQ.US,-20000,QQQ,Optional hedge leg
