@@ -1,0 +1,36 @@
+{
+  "name": "mnq-hedge-calculator-desktop",
+  "version": "1.0.0",
+  "description": "Windows desktop wrapper for MNQ Hedge Calculator",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^31.2.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.hedgecalculator.mnq",
+    "productName": "MNQ Hedge Calculator",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "assets/**/*",
+      "data/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
