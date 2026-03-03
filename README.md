@@ -5,8 +5,10 @@ Static web app that estimates portfolio beta to Nasdaq-100 (NDX proxy) using **O
 ## Features
 
 - Pure static front-end (HTML/CSS/JS), no backend.
-- EODHD EOD price fetch at runtime using user-provided API token.
-- Token is stored in browser `localStorage` only (never committed).
+- Supports two connection modes:
+  - **Direct mode (GitHub Pages friendly):** browser calls EODHD with user token.
+  - **Proxy mode (recommended):** browser calls your backend proxy; backend uses env var token.
+- In direct mode, token is stored in browser `localStorage` only (never committed).
 - Portfolio source options:
   - Upload CSV file
   - Load default `/data/portfolio.csv`
@@ -50,8 +52,9 @@ NVDA.US,30000,Nvidia
 
 ## Method B math
 
-1. Pull daily price series for all portfolio tickers + hedge symbol from EODHD:
-   - `GET https://eodhd.com/api/eod/{SYMBOL}?from=YYYY-MM-DD&to=YYYY-MM-DD&api_token={TOKEN}&fmt=json`
+1. Pull daily price series for all portfolio tickers + hedge symbol:
+   - Direct mode: `GET https://eodhd.com/api/eod/{SYMBOL}?from=YYYY-MM-DD&to=YYYY-MM-DD&api_token={TOKEN}&fmt=json`
+   - Proxy mode: `GET {YOUR_BACKEND}/api/eod/{SYMBOL}?from=YYYY-MM-DD&to=YYYY-MM-DD&fmt=json`
 2. Build portfolio-level daily price index from weighted constituent prices.
 3. Compute daily returns:
    - `r_p,t` (portfolio)
@@ -106,6 +109,22 @@ Open <http://localhost:8000>.
 - TTL default: 6 hours.
 - Requests run in parallel with concurrency limit 5.
 - Progress and per-symbol status are shown in UI.
+
+## Troubleshooting `Failed to fetch`
+
+If every symbol shows `Failed to fetch` even with a valid token in **direct mode**, it is usually a browser/network issue (not token format):
+
+- Cross-origin (CORS) policy blocked by network path.
+- DNS/firewall restrictions to `eodhd.com`.
+- Browser extensions (ad/privacy blockers) intercepting requests.
+
+If this is persistent, switch to **proxy mode**:
+
+1. Deploy a small backend endpoint `/api/eod/:symbol`.
+2. Store `EODHD_API_KEY` as a server environment variable.
+3. In app UI, fill `Proxy Base URL` (e.g. `https://your-domain.com`) and save.
+
+This keeps GitHub Pages available (direct mode), while giving you a backend escape hatch when direct browser fetch is blocked.
 
 ## Disclaimers
 

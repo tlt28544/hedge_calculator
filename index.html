@@ -17,13 +17,17 @@
       </header>
 
       <section class="card">
-        <h2>1) EODHD API Token</h2>
-        <div class="row">
-          <label for="apiToken">Token</label>
-          <input id="apiToken" type="password" placeholder="Enter EODHD API token" autocomplete="off" />
-          <button id="saveTokenBtn" type="button">Save Token</button>
+        <h2>1) Data API Connection</h2>
+        <div class="row wrap">
+          <label for="apiToken">EODHD Token</label>
+          <input id="apiToken" type="password" placeholder="Required for GitHub Pages direct mode" autocomplete="off" />
+          <button id="saveTokenBtn" type="button">Save Settings</button>
         </div>
-        <p class="muted">Token is stored only in your browser localStorage.</p>
+        <div class="row wrap">
+          <label for="proxyBase">Proxy Base URL (optional)</label>
+          <input id="proxyBase" type="text" placeholder="Example: https://your-domain.com" autocomplete="off" />
+        </div>
+        <p id="connectionModeHint" class="muted">Direct mode: browser calls EODHD using your token.</p>
       </section>
 
       <section class="card">

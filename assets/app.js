@@ -1,6 +1,8 @@
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const CACHE_PREFIX = "eodhd_cache_v1";
 const TOKEN_KEY = "eodhd_api_token";
+const PROXY_BASE_KEY = "eodhd_proxy_base_url";
+const DIRECT_EODHD_BASE_URL = "https://eodhd.com/api/eod";
 
 const state = {
   portfolioRows: [],
@@ -10,6 +12,8 @@ const state = {
 const el = {
   apiToken: document.getElementById("apiToken"),
   saveTokenBtn: document.getElementById("saveTokenBtn"),
+  proxyBase: document.getElementById("proxyBase"),
+  connectionModeHint: document.getElementById("connectionModeHint"),
   portfolioFile: document.getElementById("portfolioFile"),
   loadDefaultBtn: document.getElementById("loadDefaultBtn"),
   portfolioMeta: document.getElementById("portfolioMeta"),
@@ -33,8 +37,12 @@ init();
 function init() {
   const savedToken = localStorage.getItem(TOKEN_KEY);
   if (savedToken) el.apiToken.value = savedToken;
+  const savedProxy = localStorage.getItem(PROXY_BASE_KEY);
+  if (savedProxy) el.proxyBase.value = savedProxy;
+  refreshConnectionModeHint();
 
   el.saveTokenBtn.addEventListener("click", onSaveToken);
+  el.proxyBase.addEventListener("input", refreshConnectionModeHint);
   el.portfolioFile.addEventListener("change", onUploadFile);
   el.loadDefaultBtn.addEventListener("click", onLoadDefaultPortfolio);
   el.hedgeFraction.addEventListener("input", () => {
@@ -46,12 +54,36 @@ function init() {
 
 function onSaveToken() {
   const token = el.apiToken.value.trim();
-  if (!token) {
-    setStatus("Please enter a token before saving.");
+  const proxyBase = normalizeProxyBase(el.proxyBase.value);
+
+  if (proxyBase) {
+    localStorage.setItem(PROXY_BASE_KEY, proxyBase);
+  } else {
+    localStorage.removeItem(PROXY_BASE_KEY);
+  }
+
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else if (!proxyBase) {
+    setStatus("Please provide a token (direct mode) or proxy base URL (proxy mode).");
     return;
   }
-  localStorage.setItem(TOKEN_KEY, token);
-  setStatus("Token saved to localStorage.");
+
+  refreshConnectionModeHint();
+  setStatus(proxyBase ? "Proxy mode enabled. Token input is optional." : "Direct mode enabled. Token saved to localStorage.");
+}
+
+function refreshConnectionModeHint() {
+  const proxyBase = normalizeProxyBase(el.proxyBase?.value);
+  if (proxyBase) {
+    el.connectionModeHint.textContent = `Proxy mode: browser calls ${proxyBase}/api/eod/... (token can stay server-side env var).`;
+    return;
+  }
+  el.connectionModeHint.textContent = "Direct mode: browser calls EODHD using your token.";
+}
+
+function normalizeProxyBase(input) {
+  return String(input || "").trim().replace(/\/+$/, "");
 }
 
 async function onUploadFile(evt) {
@@ -95,8 +127,9 @@ async function onRunCalculation() {
   }
 
   const token = el.apiToken.value.trim();
-  if (!token) {
-    addMessage("error", "Missing EODHD API token.");
+  const proxyBase = normalizeProxyBase(el.proxyBase.value);
+  if (!token && !proxyBase) {
+    addMessage("error", "Provide EODHD API token (direct mode) or proxy base URL (proxy mode).");
     return;
   }
 
@@ -124,6 +157,7 @@ async function onRunCalculation() {
         to: formatDate(toDate),
         token,
         useAdjusted,
+        proxyBase,
       });
       symbolData[sym] = series;
       symbolStatus[sym] = `ok (${series.length} rows)`;
@@ -290,8 +324,8 @@ function validatePortfolioRows(rows) {
   return cleaned;
 }
 
-async function fetchPriceSeries({ symbol, from, to, token, useAdjusted }) {
-  const cacheKey = `${CACHE_PREFIX}:${symbol}:${from}:${to}:${useAdjusted}`;
+async function fetchPriceSeries({ symbol, from, to, token, useAdjusted, proxyBase }) {
+  const cacheKey = `${CACHE_PREFIX}:${proxyBase || "direct"}:${symbol}:${from}:${to}:${useAdjusted}`;
   const cached = localStorage.getItem(cacheKey);
   if (cached) {
     try {
@@ -302,14 +336,28 @@ async function fetchPriceSeries({ symbol, from, to, token, useAdjusted }) {
     }
   }
 
-  const url = new URL(`https://eodhd.com/api/eod/${encodeURIComponent(symbol)}`);
+  let url;
+  if (proxyBase) {
+    url = new URL(`${proxyBase}/api/eod/${encodeURIComponent(symbol)}`);
+  } else {
+    url = new URL(`${DIRECT_EODHD_BASE_URL}/${encodeURIComponent(symbol)}`);
+    url.searchParams.set("api_token", token);
+  }
   url.searchParams.set("from", from);
   url.searchParams.set("to", to);
-  url.searchParams.set("api_token", token);
   url.searchParams.set("fmt", "json");
 
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  let res;
+  try {
+    res = await fetch(url.toString());
+  } catch (err) {
+    throw new Error(normalizeFetchError(err));
+  }
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}${proxyBase ? " via proxy" : ""}`);
+  }
+
   const data = await res.json();
   if (!Array.isArray(data) || !data.length) throw new Error("empty response");
 
@@ -325,6 +373,14 @@ async function fetchPriceSeries({ symbol, from, to, token, useAdjusted }) {
 
   localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), data: normalized }));
   return normalized;
+}
+
+function normalizeFetchError(err) {
+  const msg = String(err?.message || err || "unknown error");
+  if (msg.toLowerCase().includes("failed to fetch")) {
+    return "Failed to fetch (check CORS/network; or use proxy mode with backend env token)";
+  }
+  return msg;
 }
 
 function choosePrice(row, useAdjusted) {
