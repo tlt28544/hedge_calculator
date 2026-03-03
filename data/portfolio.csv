@@ -1,0 +1,6 @@
+ticker,amount_usd,name
+AAPL.US,50000,Apple
+MSFT.US,40000,Microsoft
+NVDA.US,30000,Nvidia
+AMZN.US,25000,Amazon
+TSLA.US,-15000,Tesla short

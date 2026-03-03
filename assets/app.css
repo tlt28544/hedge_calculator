@@ -1,0 +1,117 @@
+:root {
+  color-scheme: light;
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #64748b;
+  --border: #dbe3ef;
+  --primary: #2563eb;
+  --danger: #b91c1c;
+  --ok: #065f46;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header h1 { margin-bottom: 8px; }
+header p { margin-top: 0; color: var(--muted); }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 14px 0;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.wrap { flex-wrap: wrap; }
+
+.grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
+input, select, button {
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+button { cursor: pointer; background: #fff; }
+button.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.inline-toggle {
+  flex-direction: row;
+  align-items: center;
+  font-weight: 500;
+}
+
+small, .muted { color: var(--muted); }
+.status { margin-top: 8px; font-size: 0.95rem; color: var(--muted); white-space: pre-line; }
+
+.table-wrap { overflow: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+th, td {
+  border: 1px solid var(--border);
+  text-align: left;
+  padding: 8px;
+}
+th { background: #f8fafc; }
+
+.message {
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.message.warn {
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+.message.error {
+  background: #fef2f2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+}
+
+.hedge-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  display: grid;
+  gap: 6px;
+}
+.hedge-card .direction { font-weight: 700; }
+.hedge-card .long { color: var(--ok); }
+.hedge-card .short { color: var(--danger); }
+
+code { background: #eef2ff; padding: 0 4px; border-radius: 4px; }
