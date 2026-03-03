@@ -84,6 +84,34 @@ python3 -m http.server 8000
 
 Open <http://localhost:8000>.
 
+## Windows desktop app (no manual local server needed)
+
+This repo now includes an Electron desktop wrapper so you can launch the calculator as a native Windows app.
+
+### For users (download and run)
+
+1. Go to your GitHub repo **Releases** page.
+2. Download the generated portable app file:
+   - `MNQ Hedge Calculator <version>.exe`
+3. Double-click to run.
+4. In the app, paste your EODHD API token, upload local CSV, and run calculation.
+
+### For maintainers (build Windows executable)
+
+```bash
+npm install
+npm run dist:win
+```
+
+Build output will be in:
+
+- `release/`
+
+Notes:
+
+- The desktop app starts an internal local static server automatically.
+- Existing features remain unchanged, including local CSV upload and default sample loading.
+
 ## Deploy to GitHub Pages
 
 1. Push this repository to GitHub.
